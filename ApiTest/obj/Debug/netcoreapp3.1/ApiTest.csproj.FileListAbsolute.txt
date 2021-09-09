@@ -1,4 +1,0 @@
-C:\Users\User\source\repos\TestSolution\ApiTest\obj\Debug\netcoreapp3.1\ApiTest.csprojAssemblyReference.cache
-C:\Users\User\source\repos\TestSolution\ApiTest\obj\Debug\netcoreapp3.1\ApiTest.AssemblyInfoInputs.cache
-C:\Users\User\source\repos\TestSolution\ApiTest\obj\Debug\netcoreapp3.1\ApiTest.AssemblyInfo.cs
-C:\Users\User\source\repos\TestSolution\ApiTest\obj\Debug\netcoreapp3.1\ApiTest.csproj.CoreCompileInputs.cache
