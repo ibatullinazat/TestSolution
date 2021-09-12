@@ -17,6 +17,7 @@ using Microsoft.OpenApi.Models;
 using CreditAPI.MappingProfiles;
 using CreditAPI.Repositories;
 using Microsoft.AspNetCore.Http;
+using System.Net.Http.Headers;
 
 namespace CreditAPI
 {
@@ -47,6 +48,12 @@ namespace CreditAPI
             services.AddAutoMapper(typeof(ApplicationMappings));
             services.AddSingleton<IConfiguration>(Configuration);
             services.AddCors();
+            //services.AddHttpClient();
+            services.AddHttpClient("Scoring", c =>
+            {
+                c.BaseAddress = new Uri(Configuration["ScoringApiUrl"]);
+                c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
