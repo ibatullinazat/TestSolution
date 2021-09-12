@@ -27,12 +27,14 @@ namespace CreditAPI.Controllers
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly ILogger _logger;
-        public ApplicationController(IRepository applicationRepository, IMapper mapper, IConfiguration configuration, ILogger<ApplicationController> logger)
+        private readonly IHttpClientFactory _clientFactory;
+        public ApplicationController(IRepository applicationRepository, IMapper mapper, IConfiguration configuration, ILogger<ApplicationController> logger, IHttpClientFactory clientFactory)
         {
             _applicationRepository = applicationRepository;
             _mapper = mapper;
             _configuration = configuration;
             _logger = logger;
+            _clientFactory = clientFactory;
         }
 
         [HttpGet]
@@ -69,33 +71,20 @@ namespace CreditAPI.Controllers
             {
                 Response.OnCompleted(async () =>
                 {
-                    using (var client = new HttpClient())
+                    var client = _clientFactory.CreateClient("Scoring");
+                    var response = await client.PostAsync("api/Scoring", new StringContent(JsonSerializer.Serialize(_mapper.Map<ApplicationStatusDto>(toAdd)), UnicodeEncoding.UTF8, "application/json"));
+
+                    if (response.IsSuccessStatusCode)
                     {
-                        client.BaseAddress = new Uri(_configuration["ScoringApiUrl"]);
-                        client.DefaultRequestHeaders.Clear();
-                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                        HttpResponseMessage Res = await client.PostAsync("api/Scoring", 
-                            new StringContent(JsonSerializer.Serialize(_mapper.Map<ApplicationStatusDto>(toAdd)), UnicodeEncoding.UTF8, "application/json"));
-
-                        if (Res.IsSuccessStatusCode)
-                        {
-                            var applStatusDto = JsonSerializer.Deserialize<ApplicationStatusDto>(Res.Content.ReadAsStringAsync().Result);
-                            toAdd.ScoringStatus = applStatusDto.ScoringStatus;
-                            toAdd.ScoringDate = applStatusDto.ScoringDate;
-                            await _applicationRepository.Update(toAdd);
-                        }
-
+                        var applStatusDto = JsonSerializer.Deserialize<ApplicationStatusDto>(response.Content.ReadAsStringAsync().Result);
+                        toAdd = _mapper.Map<Application>(applStatusDto);
+                        toAdd.ScoringStatus = applStatusDto.ScoringStatus;
+                        toAdd.ScoringDate = applStatusDto.ScoringDate;
+                        await _applicationRepository.Update(toAdd);
                     }
                 });
             }
             //return CreatedAtAction(nameof(toAdd), new { id = toAdd.Id }, createApplicationDto);
-        }
-
-        private async Task<bool> ProcessImitation(int timeoutValue)
-        {
-            await Task.Delay(timeoutValue);
-            var random = new Random();
-            return (bool)(random.Next(2) == 1);
         }
 
         [HttpDelete("{id}")]
